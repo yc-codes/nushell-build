@@ -218,96 +218,41 @@ jobs:
       - linux
       - macos
       - windows
+    strategy:
+      matrix:
+        artifact:
+          - linux-compat
+          - linux
+          - macos
+          - windows
     steps:
-      - uses: actions/checkout@v2
-      - name: Create Release Draft
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: latest
-          release_name: Latest Release
 
-      - name: Download Linux-Compat Artifacts
+      - name: Download {{ matrix.artifact }} Artifacts
         uses: actions/download-artifact@v2
         with:
-          name: linux-compat
-          path: linux-compat
+          name: {{ matrix.artifact }}
+          path: {{ matrix.artifact }}
 
-      - name: Download Linux Artifacts
-        uses: actions/download-artifact@v2
-        with:
-          name: linux
-          path: linux
-
-      - name: Download macOS Artifacts
-        uses: actions/download-artifact@v2
-        with:
-          name: macos
-          path: macos
-
-      - name: Download Windows Artifacts
-        uses: actions/download-artifact@v2
-        with:
-          name: windows
-          path: windows
-
-      - name: Prep Linux-Compat Artifacts
+      - name: Prep Artifacts
         run: |
           chmod 755 linux-compat/*
           tar -zcvf linux-compat.tar.gz linux-compat
 
-      - name: Prep Linux Artifacts
-        run: |
           chmod 755 linux/*
           tar -zcvf linux.tar.gz linux
 
-      - name: Prep MacOS Artifacts
-        run: |
           chmod 755 macos/*
           zip -r macos.zip macos
 
-      - name: Prep Windows Artifacts
-        run: |
           zip -r windows.zip windows
-
-      - name: Upload Linux-Compat Artifact
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Release
+        uses: "marvinpinto/action-automatic-releases@latest"
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./linux-compat.tar.gz
-          asset_name: linux-compat.tar.gz
-          asset_content_type: application/gzip
-
-      - name: Upload Linux Artifact
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./linux.tar.gz
-          asset_name: linux.tar.gz
-          asset_content_type: application/gzip
-
-      - name: Upload macOS Artifact
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./macos.zip
-          asset_name: macos.zip
-          asset_content_type: application/zip
-
-      - name: Upload Windows Artifact
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./windows.zip
-          asset_name: windows.zip
-          asset_content_type: application/zip
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: false
+          title: "Latest Build"
+          files: |
+            *.zip
+            *.tar.gz
