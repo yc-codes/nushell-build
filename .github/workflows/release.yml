@@ -1,0 +1,40 @@
+name: Create Release Draft
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  linux:
+    name: Build Portable Linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out build code
+        uses: actions/checkout@v2
+
+      - name: Check out nushell code
+        uses: actions/checkout@v2
+        with:
+          repository: nushell/nushell
+          path: nushell
+
+      - name: Docker build
+        run: docker build -t nushell-build
+
+      - name: Extract binaries
+        run: |
+          mkdir output
+          docker container create --name nushell-build nushell-build
+          docker cp nushell-build:/usr/src/nushell/bin/ output/
+
+      - name: check
+        run: |
+          ls -la output
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: linux-portable
+          path: output/*
+
+ 
