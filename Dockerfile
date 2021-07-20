@@ -8,10 +8,6 @@ RUN yum install -y openssl-static zlib-devel
 
 ENV OPENSSL_STATIC=true
 
-RUN cargo install --path . --root .
-#--all --features=extra 
-#--release
-
-RUN ls -la bin
+RUN cargo install --path . --root . --all --features=extra
 
 CMD ["/bin/bash"]

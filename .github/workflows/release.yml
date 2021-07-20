@@ -5,8 +5,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  linux:
-    name: Build Portable Linux
+  linux-portable:
+    name: Build Linux Compat (glibc 2.17-compatible)
     runs-on: ubuntu-latest
     steps:
       - name: Check out build code
@@ -25,16 +25,139 @@ jobs:
         run: |
           mkdir output
           docker container create --name nushell-build nushell-build
-          docker cp nushell-build:/usr/src/nushell/bin/ output/
-
-      - name: check
-        run: |
-          ls -la output
+          docker cp nushell-build:/usr/src/nushell/bin/ ./
+          mv bin/nu* output/
+          docker cp nushell-build:/usr/src/nushell/README.build.txt output/
+          docker cp nushell-build:/usr/src/nushell/LICENSE output/
 
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
           name: linux-portable
+          path: output/bin/*
+
+  linux:
+    name: Build Linux
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
+        with:
+          repository: nushell/nushell
+          path: nushell
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Install Clang Dependencies
+        run: sudo apt-get install libxcb-composite0-dev pkg-config libssl-dev libx11-dev
+
+      - name: Build
+        run: |
+          cd nushell
+          cargo install --path . --root . --all --features=extra
+          cd ..
+          cp nushell/bin/nu* output/
+          cp nushell/README.build.txt output/README.txt
+          cp nushell/LICENSE output/LICENSE
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: linux
           path: output/*
 
- 
+
+  macos:
+    name: Build macOS
+    runs-on: macos-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Set up cargo
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release --all --features=extra
+
+      - name: Create output directory
+        run: mkdir output
+
+      - name: Copy files to output
+        run: |
+          cp target/release/nu target/release/nu_plugin_* output/
+          cp README.build.txt output/README.txt
+          cp LICENSE output/LICENSE
+          rm output/*.d
+          rm output/nu_plugin_core_*
+          rm output/nu_plugin_extra_*
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: macos
+          path: output/*
+
+  windows:
+    name: Build Windows
+    runs-on: windows-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Set up cargo
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Add cargo-wix subcommand
+        uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: cargo-wix
+
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release --all --features=extra
+
+      - name: Create output directory
+        run: mkdir output
+
+      - name: Download Less Binary
+        run: Invoke-WebRequest -Uri "https://github.com/jftuga/less-Windows/releases/download/less-v562.0/less.exe" -OutFile "target\release\less.exe"
+
+      - name: Download Less License
+        run: Invoke-WebRequest -Uri "https://raw.githubusercontent.com/jftuga/less-Windows/master/LICENSE" -OutFile "target\release\LICENSE-for-less.txt"
+
+      - name: Copy files to output
+        run: |
+          cp target\release\nu.exe output\
+          cp LICENSE output\
+          cp target\release\LICENSE-for-less.txt output\
+          rm target\release\nu_plugin_core_*.exe
+          rm target\release\nu_plugin_extra_*.exe
+          cp target\release\nu_plugin_*.exe output\
+          cp README.build.txt output\README.txt
+          cp target\release\less.exe output\
+      # Note: If the version of `less.exe` needs to be changed, update this URL
+      # Similarly, if `less.exe` is checked into the repo, copy from the local path here
+      # moved this stuff down to create wix after we download less
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: windows
+          path: output\*
