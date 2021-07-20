@@ -34,7 +34,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: linux-compat
-          path: output/bin/*
+          path: output/*
 
   linux:
     name: Build Linux
