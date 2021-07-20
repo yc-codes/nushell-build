@@ -213,10 +213,11 @@ jobs:
   release:
     name: Publish Release
     runs-on: ubuntu-latest
-    # needs:
-    #   - linux
-    #   - macos
-    #   - windows
+    needs:
+      - linux-compat
+      - linux
+      - macos
+      - windows
     steps:
       - uses: actions/checkout@v2
       - name: Create Release Draft
