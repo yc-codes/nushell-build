@@ -118,12 +118,11 @@ jobs:
 
       - name: Build
         run: |
-          mkdir output
           cd nushell
           cargo install --path . --root . --features=extra
           cd ..
-
           mkdir output
+
           Invoke-WebRequest -Uri "https://github.com/jftuga/less-Windows/releases/download/less-v562.0/less.exe" -OutFile "output\less.exe"
           Invoke-WebRequest -Uri "https://raw.githubusercontent.com/jftuga/less-Windows/master/LICENSE" -OutFile "output\LICENSE-for-less.txt"
 
