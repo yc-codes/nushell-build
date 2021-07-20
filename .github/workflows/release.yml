@@ -136,6 +136,80 @@ jobs:
   #         name: windows
   #         path: output\*
 
+  linux-compat:
+    name: Build Linux Compat (glibc 2.17-compatible)
+    runs-on: ubuntu-latest
+    steps:
+      - name: fake build
+        run: |
+          mkdir output
+          cd output
+          echo hello > linux-compat-file1
+          echo hello > linux-compat-file2
+          echo hello > linux-compat-file3
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: linux-compat
+          path: output/*
+
+  linux:
+    name: Build Linux
+    runs-on: ubuntu-latest
+    steps:
+      
+      - name: fake build
+        run: |
+          mkdir output
+          cd output
+          echo hello > linux-file1
+          echo hello > linux-file2
+          echo hello > linux-file3
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: linux
+          path: output/*
+
+  macos:
+    name: Build macOS
+    runs-on: macos-latest
+    steps:
+      
+      - name: fake build
+        run: |
+          mkdir output
+          cd output
+          echo hello > macos-file1
+          echo hello > macos-file2
+          echo hello > macos-file3
+    
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: macos
+          path: output/*
+
+  windows:
+    name: Build Windows
+    runs-on: windows-latest
+    steps:
+      - name: fake build
+        run: |
+          mkdir output
+          cd output
+          echo hello > windows-file1
+          echo hello > windows-file2
+          echo hello > windows-file3
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: windows
+          path: output\*
+
   release:
     name: Publish Release
     runs-on: ubuntu-latest
