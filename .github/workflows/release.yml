@@ -5,133 +5,234 @@ on:
   workflow_dispatch:
 
 jobs:
-  linux-compat:
-    name: Build Linux Compat (glibc 2.17-compatible)
+  # linux-compat:
+  #   name: Build Linux Compat (glibc 2.17-compatible)
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Check out build code
+  #       uses: actions/checkout@v2
+
+  #     - name: Check out nushell code
+  #       uses: actions/checkout@v2
+  #       with:
+  #         repository: nushell/nushell
+  #         path: nushell
+
+  #     - name: Docker build
+  #       run: docker build -t nushell-build .
+
+  #     - name: Extract binaries
+  #       run: |
+  #         mkdir output
+  #         docker container create --name nushell-build nushell-build
+  #         docker cp nushell-build:/usr/src/nushell/bin/ ./
+  #         mv bin/nu* output/
+  #         docker cp nushell-build:/usr/src/nushell/README.build.txt output/
+  #         docker cp nushell-build:/usr/src/nushell/LICENSE output/
+
+  #     - name: Upload artifact
+  #       uses: actions/upload-artifact@v2
+  #       with:
+  #         name: linux-compat
+  #         path: output/*
+
+  # linux:
+  #   name: Build Linux
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: actions/checkout@v2
+  #       with:
+  #         repository: nushell/nushell
+  #         path: nushell
+  #     - uses: actions-rs/toolchain@v1
+  #       with:
+  #         profile: minimal
+  #         toolchain: stable
+  #         override: true
+
+  #     - name: Install Clang Dependencies
+  #       run: sudo apt-get install libxcb-composite0-dev pkg-config libssl-dev libx11-dev
+
+  #     - name: Build
+  #       run: |
+  #         cd nushell
+  #         cargo install --path . --root . --features=extra
+  #         cd ..
+  #         mkdir output
+  #         cp nushell/bin/nu* output/
+  #         cp nushell/README.build.txt output/README.txt
+  #         cp nushell/LICENSE output/LICENSE
+
+  #     - name: Upload artifact
+  #       uses: actions/upload-artifact@v2
+  #       with:
+  #         name: linux
+  #         path: output/*
+
+  # macos:
+  #   name: Build macOS
+  #   runs-on: macos-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: actions/checkout@v2
+  #       with:
+  #         repository: nushell/nushell
+  #         path: nushell
+  #     - uses: actions-rs/toolchain@v1
+  #       with:
+  #         profile: minimal
+  #         toolchain: stable
+  #         override: true
+  #     #- uses: Homebrew/actions/setup-homebrew@master 
+
+  #     - name: Build
+  #       run: |
+  #         cd nushell
+  #         cargo install --path . --root . --features=extra
+  #         cd ..
+  #         mkdir output
+  #         cp nushell/bin/nu* output/
+  #         cp nushell/README.build.txt output/README.txt
+  #         cp nushell/LICENSE output/LICENSE
+  #     - name: Upload artifact
+  #       uses: actions/upload-artifact@v2
+  #       with:
+  #         name: macos
+  #         path: output/*
+
+  # windows:
+  #   name: Build Windows
+  #   runs-on: windows-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: actions/checkout@v2
+  #       with:
+  #         repository: nushell/nushell
+  #         path: nushell
+  #     - uses: actions-rs/toolchain@v1
+  #       with:
+  #         profile: minimal
+  #         toolchain: stable
+  #         override: true
+
+  #     - name: Build
+  #       run: |
+  #         cd nushell
+  #         cargo install --path . --root . --features=extra
+  #         cd ..
+  #         mkdir output
+
+  #         Invoke-WebRequest -Uri "https://github.com/jftuga/less-Windows/releases/download/less-v562.0/less.exe" -OutFile "output\less.exe"
+  #         Invoke-WebRequest -Uri "https://raw.githubusercontent.com/jftuga/less-Windows/master/LICENSE" -OutFile "output\LICENSE-for-less.txt"
+
+  #         cp nushell\bin\nu* output\
+  #         cp nushell\LICENSE output\
+  #         cp nushell/README.build.txt output\README.txt
+
+  #     - name: Upload artifact
+  #       uses: actions/upload-artifact@v2
+  #       with:
+  #         name: windows
+  #         path: output\*
+
+  release:
+    name: Publish Release
     runs-on: ubuntu-latest
+    # needs:
+    #   - linux
+    #   - macos
+    #   - windows
     steps:
-      - name: Check out build code
-        uses: actions/checkout@v2
-
-      - name: Check out nushell code
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
+      - name: Create Release Draft
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          repository: nushell/nushell
-          path: nushell
+          tag_name: latest
+          release_name: Latest Release
 
-      - name: Docker build
-        run: docker build -t nushell-build .
-
-      - name: Extract binaries
-        run: |
-          mkdir output
-          docker container create --name nushell-build nushell-build
-          docker cp nushell-build:/usr/src/nushell/bin/ ./
-          mv bin/nu* output/
-          docker cp nushell-build:/usr/src/nushell/README.build.txt output/
-          docker cp nushell-build:/usr/src/nushell/LICENSE output/
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v2
+      - name: Download Linux-Compat Artifacts
+        uses: actions/download-artifact@v2
         with:
           name: linux-compat
-          path: output/*
+          path: linux-compat
 
-  linux:
-    name: Build Linux
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/checkout@v2
-        with:
-          repository: nushell/nushell
-          path: nushell
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-
-      - name: Install Clang Dependencies
-        run: sudo apt-get install libxcb-composite0-dev pkg-config libssl-dev libx11-dev
-
-      - name: Build
-        run: |
-          cd nushell
-          cargo install --path . --root . --features=extra
-          cd ..
-          mkdir output
-          cp nushell/bin/nu* output/
-          cp nushell/README.build.txt output/README.txt
-          cp nushell/LICENSE output/LICENSE
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v2
+      - name: Download Linux Artifacts
+        uses: actions/download-artifact@v2
         with:
           name: linux
-          path: output/*
+          path: linux
 
-  macos:
-    name: Build macOS
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/checkout@v2
-        with:
-          repository: nushell/nushell
-          path: nushell
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-      #- uses: Homebrew/actions/setup-homebrew@master 
-
-      - name: Build
-        run: |
-          cd nushell
-          cargo install --path . --root . --features=extra
-          cd ..
-          mkdir output
-          cp nushell/bin/nu* output/
-          cp nushell/README.build.txt output/README.txt
-          cp nushell/LICENSE output/LICENSE
-      - name: Upload artifact
-        uses: actions/upload-artifact@v2
+      - name: Download macOS Artifacts
+        uses: actions/download-artifact@v2
         with:
           name: macos
-          path: output/*
+          path: macos
 
-  windows:
-    name: Build Windows
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/checkout@v2
-        with:
-          repository: nushell/nushell
-          path: nushell
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-
-      - name: Build
-        run: |
-          cd nushell
-          cargo install --path . --root . --features=extra
-          cd ..
-          mkdir output
-
-          Invoke-WebRequest -Uri "https://github.com/jftuga/less-Windows/releases/download/less-v562.0/less.exe" -OutFile "output\less.exe"
-          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/jftuga/less-Windows/master/LICENSE" -OutFile "output\LICENSE-for-less.txt"
-
-          cp nushell\bin\nu* output\
-          cp nushell\LICENSE output\
-          cp nushell/README.build.txt output\README.txt
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v2
+      - name: Download Windows Artifacts
+        uses: actions/download-artifact@v2
         with:
           name: windows
-          path: output\*
+          path: windows
+
+      - name: Prep Linux-Compat Artifacts
+        run: |
+          chmod 755 linux-compat/*
+          tar -zcvf linux-compat.tar.gz linux-compat
+
+      - name: Prep Linux Artifacts
+        run: |
+          chmod 755 linux/*
+          tar -zcvf linux.tar.gz linux
+
+      - name: Prep MacOS Artifacts
+        run: |
+          chmod 755 macos/*
+          zip -r macos.zip macos
+
+      - name: Prep Windows Artifacts
+        run: |
+          zip -r windows.zip windows
+
+      - name: Upload Linux-Compat Artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./linux-compat.tar.gz
+          asset_name: linux-compat.tar.gz
+          asset_content_type: application/gzip
+
+      - name: Upload Linux Artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./linux.tar.gz
+          asset_name: linux.tar.gz
+          asset_content_type: application/gzip
+
+      - name: Upload macOS Artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./macos.zip
+          asset_name: macos.zip
+          asset_content_type: application/zip
+
+      - name: Upload Windows Artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./windows.zip
+          asset_name: windows.zip
+          asset_content_type: application/zip
