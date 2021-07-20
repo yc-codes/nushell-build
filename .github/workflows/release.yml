@@ -57,7 +57,7 @@ jobs:
       - name: Build
         run: |
           cd nushell
-          cargo install --path . --root . --all --features=extra
+          cargo install --path . --root . --features=extra
           cd ..
           cp nushell/bin/nu* output/
           cp nushell/README.build.txt output/README.txt
