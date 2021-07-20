@@ -19,7 +19,7 @@ jobs:
           path: nushell
 
       - name: Docker build
-        run: docker build -t nushell-build
+        run: docker build -t nushell-build .
 
       - name: Extract binaries
         run: |
